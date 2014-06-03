@@ -250,6 +250,12 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
                                              long requestedSize,
                                              int fetcher
                                              ) throws IOException {
+	  
+	  if (requestedSize == -1) {
+		  return new LinkMapOutput<K, V>(mapId, reduceId, this, requestedSize, jobConf,
+				  mapOutputFile, fetcher, true);
+	  }
+	  
     if (!canShuffleToMemory(requestedSize)) {
       LOG.info(mapId + ": Shuffling to disk since " + requestedSize + 
                " is greater than maxSingleShuffleLimit (" + 
@@ -525,7 +531,7 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
       
       // 1. Prepare the list of files to be merged. 
       for (CompressAwarePath file : inputs) {
-        approxOutputSize += localFS.getFileStatus(file).getLen();
+    	  approxOutputSize += file.getCompressedSize();
       }
 
       // add the checksum length
@@ -809,49 +815,5 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
                  comparator, reporter, spilledRecordsCounter, null,
                  null);
   
-  }
-
-  static class CompressAwarePath extends Path {
-    private long rawDataLength;
-    private long compressedSize;
-
-    public CompressAwarePath(Path path, long rawDataLength, long compressSize) {
-      super(path.toUri());
-      this.rawDataLength = rawDataLength;
-      this.compressedSize = compressSize;
-    }
-
-    public long getRawDataLength() {
-      return rawDataLength;
-    }
-
-    public long getCompressedSize() {
-      return compressedSize;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return super.equals(other);
-    }
-
-    @Override
-    public int hashCode() {
-      return super.hashCode();
-    }
-
-    @Override
-    public int compareTo(Object obj) {
-      if(obj instanceof CompressAwarePath) {
-        CompressAwarePath compPath = (CompressAwarePath) obj;
-        if(this.compressedSize < compPath.getCompressedSize()) {
-          return -1;
-        } else if (this.getCompressedSize() > compPath.getCompressedSize()) {
-          return 1;
-        }
-        // Not returning 0 here so that objects with the same size (but
-        // different paths) are still added to the TreeSet.
-      }
-      return super.compareTo(obj);
-    }
   }
 }

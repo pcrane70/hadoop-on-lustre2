@@ -256,80 +256,80 @@ class Fetcher<K,V> extends Thread {
     Set<TaskAttemptID> remaining = new HashSet<TaskAttemptID>(maps);
     
     // Construct the url and connect
-    DataInputStream input = null;
-    try {
-      URL url = getMapOutputURL(host, maps);
-      openConnection(url);
-      if (stopped) {
-        abortConnect(host, remaining);
-        return;
-      }
-      
-      // generate hash of the url
-      String msgToEncode = SecureShuffleUtils.buildMsgFrom(url);
-      String encHash = SecureShuffleUtils.hashFromString(msgToEncode,
-          shuffleSecretKey);
-      
-      // put url hash into http header
-      connection.addRequestProperty(
-          SecureShuffleUtils.HTTP_HEADER_URL_HASH, encHash);
-      // set the read timeout
-      connection.setReadTimeout(readTimeout);
-      // put shuffle version into http header
-      connection.addRequestProperty(ShuffleHeader.HTTP_HEADER_NAME,
-          ShuffleHeader.DEFAULT_HTTP_HEADER_NAME);
-      connection.addRequestProperty(ShuffleHeader.HTTP_HEADER_VERSION,
-          ShuffleHeader.DEFAULT_HTTP_HEADER_VERSION);
-      connect(connection, connectionTimeout);
-      // verify that the thread wasn't stopped during calls to connect
-      if (stopped) {
-        abortConnect(host, remaining);
-        return;
-      }
-      input = new DataInputStream(connection.getInputStream());
-
-      // Validate response code
-      int rc = connection.getResponseCode();
-      if (rc != HttpURLConnection.HTTP_OK) {
-        throw new IOException(
-            "Got invalid response code " + rc + " from " + url +
-            ": " + connection.getResponseMessage());
-      }
-      // get the shuffle version
-      if (!ShuffleHeader.DEFAULT_HTTP_HEADER_NAME.equals(
-          connection.getHeaderField(ShuffleHeader.HTTP_HEADER_NAME))
-          || !ShuffleHeader.DEFAULT_HTTP_HEADER_VERSION.equals(
-              connection.getHeaderField(ShuffleHeader.HTTP_HEADER_VERSION))) {
-        throw new IOException("Incompatible shuffle response version");
-      }
-      // get the replyHash which is HMac of the encHash we sent to the server
-      String replyHash = connection.getHeaderField(SecureShuffleUtils.HTTP_HEADER_REPLY_URL_HASH);
-      if(replyHash==null) {
-        throw new IOException("security validation of TT Map output failed");
-      }
-      LOG.debug("url="+msgToEncode+";encHash="+encHash+";replyHash="+replyHash);
-      // verify that replyHash is HMac of encHash
-      SecureShuffleUtils.verifyReply(replyHash, encHash, shuffleSecretKey);
-      LOG.info("for url="+msgToEncode+" sent hash and received reply");
-    } catch (IOException ie) {
-      boolean connectExcpt = ie instanceof ConnectException;
-      ioErrs.increment(1);
-      LOG.warn("Failed to connect to " + host + " with " + remaining.size() + 
-               " map outputs", ie);
-
-      // If connect did not succeed, just mark all the maps as failed,
-      // indirectly penalizing the host
-      for(TaskAttemptID left: remaining) {
-        scheduler.copyFailed(left, host, false, connectExcpt);
-      }
-     
-      // Add back all the remaining maps, WITHOUT marking them as failed
-      for(TaskAttemptID left: remaining) {
-        scheduler.putBackKnownMapOutput(host, left);
-      }
-      
-      return;
-    }
+//    DataInputStream input = null;
+//    try {
+//      URL url = getMapOutputURL(host, maps);
+//      openConnection(url);
+//      if (stopped) {
+//        abortConnect(host, remaining);
+//        return;
+//      }
+//      
+//      // generate hash of the url
+//      String msgToEncode = SecureShuffleUtils.buildMsgFrom(url);
+//      String encHash = SecureShuffleUtils.hashFromString(msgToEncode,
+//          shuffleSecretKey);
+//      
+//      // put url hash into http header
+//      connection.addRequestProperty(
+//          SecureShuffleUtils.HTTP_HEADER_URL_HASH, encHash);
+//      // set the read timeout
+//      connection.setReadTimeout(readTimeout);
+//      // put shuffle version into http header
+//      connection.addRequestProperty(ShuffleHeader.HTTP_HEADER_NAME,
+//          ShuffleHeader.DEFAULT_HTTP_HEADER_NAME);
+//      connection.addRequestProperty(ShuffleHeader.HTTP_HEADER_VERSION,
+//          ShuffleHeader.DEFAULT_HTTP_HEADER_VERSION);
+//      connect(connection, connectionTimeout);
+//      // verify that the thread wasn't stopped during calls to connect
+//      if (stopped) {
+//        abortConnect(host, remaining);
+//        return;
+//      }
+//      input = new DataInputStream(connection.getInputStream());
+//
+//      // Validate response code
+//      int rc = connection.getResponseCode();
+//      if (rc != HttpURLConnection.HTTP_OK) {
+//        throw new IOException(
+//            "Got invalid response code " + rc + " from " + url +
+//            ": " + connection.getResponseMessage());
+//      }
+//      // get the shuffle version
+//      if (!ShuffleHeader.DEFAULT_HTTP_HEADER_NAME.equals(
+//          connection.getHeaderField(ShuffleHeader.HTTP_HEADER_NAME))
+//          || !ShuffleHeader.DEFAULT_HTTP_HEADER_VERSION.equals(
+//              connection.getHeaderField(ShuffleHeader.HTTP_HEADER_VERSION))) {
+//        throw new IOException("Incompatible shuffle response version");
+//      }
+//      // get the replyHash which is HMac of the encHash we sent to the server
+//      String replyHash = connection.getHeaderField(SecureShuffleUtils.HTTP_HEADER_REPLY_URL_HASH);
+//      if(replyHash==null) {
+//        throw new IOException("security validation of TT Map output failed");
+//      }
+//      LOG.debug("url="+msgToEncode+";encHash="+encHash+";replyHash="+replyHash);
+//      // verify that replyHash is HMac of encHash
+//      SecureShuffleUtils.verifyReply(replyHash, encHash, shuffleSecretKey);
+//      LOG.info("for url="+msgToEncode+" sent hash and received reply");
+//    } catch (IOException ie) {
+//      boolean connectExcpt = ie instanceof ConnectException;
+//      ioErrs.increment(1);
+//      LOG.warn("Failed to connect to " + host + " with " + remaining.size() + 
+//               " map outputs", ie);
+//
+//      // If connect did not succeed, just mark all the maps as failed,
+//      // indirectly penalizing the host
+//      for(TaskAttemptID left: remaining) {
+//        scheduler.copyFailed(left, host, false, connectExcpt);
+//      }
+//     
+//      // Add back all the remaining maps, WITHOUT marking them as failed
+//      for(TaskAttemptID left: remaining) {
+//        scheduler.putBackKnownMapOutput(host, left);
+//      }
+//      
+//      return;
+//    }
     
     try {
       // Loop through available map-outputs and fetch them
@@ -338,7 +338,8 @@ class Fetcher<K,V> extends Thread {
       // yet_to_be_fetched list and marking the failed tasks.
       TaskAttemptID[] failedTasks = null;
       while (!remaining.isEmpty() && failedTasks == null) {
-        failedTasks = copyMapOutput(host, input, remaining);
+        //failedTasks = copyMapOutput(host, input, remaining);
+    	  failedTasks = copyMapOutput(host, null, remaining);
       }
       
       if(failedTasks != null && failedTasks.length > 0) {
@@ -353,13 +354,13 @@ class Fetcher<K,V> extends Thread {
         throw new IOException("server didn't return all expected map outputs: "
             + remaining.size() + " left.");
       }
-      input.close();
-      input = null;
+//      input.close();
+//      input = null;
     } finally {
-      if (input != null) {
-        IOUtils.cleanup(LOG, input);
-        input = null;
-      }
+//      if (input != null) {
+//        IOUtils.cleanup(LOG, input);
+//        input = null;
+//      }
       for (TaskAttemptID left : remaining) {
         scheduler.putBackKnownMapOutput(host, left);
       }
@@ -372,39 +373,39 @@ class Fetcher<K,V> extends Thread {
                                 DataInputStream input,
                                 Set<TaskAttemptID> remaining) {
     MapOutput<K,V> mapOutput = null;
-    TaskAttemptID mapId = null;
+    TaskAttemptID mapId = remaining.iterator().next();
     long decompressedLength = -1;
     long compressedLength = -1;
     
     try {
-      long startTime = System.currentTimeMillis();
-      int forReduce = -1;
-      //Read the shuffle header
-      try {
-        ShuffleHeader header = new ShuffleHeader();
-        header.readFields(input);
-        mapId = TaskAttemptID.forName(header.mapId);
-        compressedLength = header.compressedLength;
-        decompressedLength = header.uncompressedLength;
-        forReduce = header.forReduce;
-      } catch (IllegalArgumentException e) {
-        badIdErrs.increment(1);
-        LOG.warn("Invalid map id ", e);
-        //Don't know which one was bad, so consider all of them as bad
-        return remaining.toArray(new TaskAttemptID[remaining.size()]);
-      }
+//      long startTime = System.currentTimeMillis();
+//      int forReduce = -1;
+//      //Read the shuffle header
+//      try {
+//        ShuffleHeader header = new ShuffleHeader();
+//        header.readFields(input);
+//        mapId = TaskAttemptID.forName(header.mapId);
+//        compressedLength = header.compressedLength;
+//        decompressedLength = header.uncompressedLength;
+//        forReduce = header.forReduce;
+//      } catch (IllegalArgumentException e) {
+//        badIdErrs.increment(1);
+//        LOG.warn("Invalid map id ", e);
+//        //Don't know which one was bad, so consider all of them as bad
+//        return remaining.toArray(new TaskAttemptID[remaining.size()]);
+//      }
 
  
       // Do some basic sanity verification
-      if (!verifySanity(compressedLength, decompressedLength, forReduce,
-          remaining, mapId)) {
-        return new TaskAttemptID[] {mapId};
-      }
+//      if (!verifySanity(compressedLength, decompressedLength, forReduce,
+//          remaining, mapId)) {
+//        return new TaskAttemptID[] {mapId};
+//      }
       
-      if(LOG.isDebugEnabled()) {
-        LOG.debug("header: " + mapId + ", len: " + compressedLength + 
-            ", decomp len: " + decompressedLength);
-      }
+//      if(LOG.isDebugEnabled()) {
+//        LOG.debug("header: " + mapId + ", len: " + compressedLength + 
+//            ", decomp len: " + decompressedLength);
+//      }
       
       // Get the location for the map output - either in-memory or on-disk
       try {
@@ -428,9 +429,11 @@ class Fetcher<K,V> extends Thread {
       // to allow fetch failure logic to be processed
       try {
         // Go!
-        LOG.info("fetcher#" + id + " about to shuffle output of map "
-            + mapOutput.getMapId() + " decomp: " + decompressedLength
-            + " len: " + compressedLength + " to " + mapOutput.getDescription());
+//        LOG.info("fetcher#" + id + " about to shuffle output of map "
+//            + mapOutput.getMapId() + " decomp: " + decompressedLength
+//            + " len: " + compressedLength + " to " + mapOutput.getDescription());
+    	  LOG.info("fetcher#" + id + " about to shuffle output of map "
+    			  + mapOutput.getMapId() + " to " + mapOutput.getDescription());
         mapOutput.shuffle(host, input, compressedLength, decompressedLength,
             metrics, reporter);
       } catch (java.lang.InternalError e) {
@@ -439,24 +442,26 @@ class Fetcher<K,V> extends Thread {
       }
       
       // Inform the shuffle scheduler
-      long endTime = System.currentTimeMillis();
+      // long endTime = System.currentTimeMillis();
+      long elapsedTime = 0L;
       scheduler.copySucceeded(mapId, host, compressedLength, 
-                              endTime - startTime, mapOutput);
+                              elapsedTime, mapOutput);
       // Note successful shuffle
       remaining.remove(mapId);
       metrics.successFetch();
       return null;
     } catch (IOException ioe) {
       ioErrs.increment(1);
-      if (mapId == null || mapOutput == null) {
-        LOG.info("fetcher#" + id + " failed to read map header" + 
-                 mapId + " decomp: " + 
-                 decompressedLength + ", " + compressedLength, ioe);
-        if(mapId == null) {
-          return remaining.toArray(new TaskAttemptID[remaining.size()]);
-        } else {
+//      if (mapId == null || mapOutput == null) {
+      if (mapOutput == null) {
+        //LOG.info("fetcher#" + id + " failed to read map header" + 
+        //         mapId + " decomp: " + 
+        //         decompressedLength + ", " + compressedLength, ioe);
+        //if(mapId == null) {
+        //  return remaining.toArray(new TaskAttemptID[remaining.size()]);
+        //} else {
           return new TaskAttemptID[] {mapId};
-        }
+        //}
       }
       
       LOG.warn("Failed to shuffle output of " + mapId + 

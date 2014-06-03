@@ -40,6 +40,7 @@ import org.apache.hadoop.mapred.IFile.Reader;
 import org.apache.hadoop.mapred.IFile.Writer;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.mapreduce.task.reduce.CompressAwarePath;
 import org.apache.hadoop.util.PriorityQueue;
 import org.apache.hadoop.util.Progress;
 import org.apache.hadoop.util.Progressable;
@@ -451,8 +452,19 @@ public class Merger {
       }
       
       for (Path file : inputs) {
+    	  
+    	  long offset = 0;
+    	  long compressedLength;
+    	  if (file instanceof CompressAwarePath) {
+    		  CompressAwarePath path = (CompressAwarePath) file;
+    		  offset = path.getOffset();
+    		  compressedLength = path.getCompressedSize();
+    	  } else {
+    		  compressedLength = fs.getFileStatus(file).getLen();
+    	  }
+    	  
         LOG.debug("MergeQ: adding: " + file);
-        segments.add(new Segment<K, V>(conf, fs, file, codec, !deleteInputs, 
+        segments.add(new Segment<K, V>(conf, fs, file, offset, compressedLength, codec, !deleteInputs, 
                                        (file.toString().endsWith(
                                            Task.MERGED_OUTPUT_PREFIX) ? 
                                         null : mergedMapOutputsCounter)));
