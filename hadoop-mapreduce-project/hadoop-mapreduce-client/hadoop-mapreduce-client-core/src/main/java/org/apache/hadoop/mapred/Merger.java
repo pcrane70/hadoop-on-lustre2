@@ -253,7 +253,16 @@ public class Merger {
           mergedMapOutputsCounter);
       this.rawDataLength = rawDataLength;
     }
-
+    
+    public Segment(Configuration conf, FileSystem fs, Path file,
+            CompressionCodec codec, boolean preserve,
+            Counters.Counter mergedMapOutputsCounter, long segmentOffset, long segmentLength, long rawDataLength)
+                throws IOException {
+          this(conf, fs, file, segmentOffset, segmentLength, codec, preserve, 
+              mergedMapOutputsCounter);
+          this.rawDataLength = rawDataLength;
+        }
+    
     public Segment(Configuration conf, FileSystem fs, Path file,
                    long segmentOffset, long segmentLength,
                    CompressionCodec codec,
@@ -458,7 +467,7 @@ public class Merger {
     	  if (file instanceof CompressAwarePath) {
     		  CompressAwarePath path = (CompressAwarePath) file;
     		  offset = path.getOffset();
-    		  compressedLength = path.getCompressedSize();
+    		  compressedLength = path.getRawDataLength();
     	  } else {
     		  compressedLength = fs.getFileStatus(file).getLen();
     	  }
@@ -705,7 +714,6 @@ public class Merger {
           LOG.info("Merging " + segmentsToMerge.size() + 
                    " intermediate segments out of a total of " + 
                    (segments.size()+segmentsToMerge.size()));
-          
           long bytesProcessedInPrevMerges = totalBytesProcessed;
           totalBytesProcessed += startBytes;
 

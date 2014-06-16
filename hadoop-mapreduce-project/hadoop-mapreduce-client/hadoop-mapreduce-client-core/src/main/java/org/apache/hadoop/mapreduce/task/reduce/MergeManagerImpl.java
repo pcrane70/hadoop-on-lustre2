@@ -562,6 +562,7 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
 
         Merger.writeFile(iter, writer, reporter, jobConf);
         writer.close();
+        
         compressAwarePath = new CompressAwarePath(outputPath,
             writer.getRawLength(), writer.getCompressedLength());
       } catch (IOException e) {
@@ -767,13 +768,25 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
       long fileLength = fs.getFileStatus(file).getLen();
       onDiskBytes += fileLength;
       rawBytes += (file.getRawDataLength() > 0) ? file.getRawDataLength() : fileLength;
-
+      
       LOG.debug("Disk file: " + file + " Length is " + fileLength);
-      diskSegments.add(new Segment<K, V>(job, fs, file, codec, keepInputs,
-                                         (file.toString().endsWith(
-                                             Task.MERGED_OUTPUT_PREFIX) ?
-                                          null : mergedMapOutputsCounter), file.getRawDataLength()
-                                        ));
+      
+      Segment<K, V> s;
+      if (!file.toString().contains("merged")) {
+      s = new Segment<K, V>(job, fs, file, codec, keepInputs,
+              (file.toString().endsWith(
+                  Task.MERGED_OUTPUT_PREFIX) ?
+               null : mergedMapOutputsCounter), file.getOffset(), file.getRawDataLength(), file.getRawDataLength()
+             );
+      } else {
+        s = new Segment<K, V>(job, fs, file, codec, keepInputs,
+        (file.toString().endsWith(
+                Task.MERGED_OUTPUT_PREFIX) ?
+             null : mergedMapOutputsCounter), file.getRawDataLength()
+           );
+      }
+      
+      diskSegments.add(s);
     }
     LOG.info("Merging " + onDisk.length + " files, " +
              onDiskBytes + " bytes from disk");

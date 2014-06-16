@@ -37,7 +37,7 @@ public abstract class MapOutput<K, V> {
   
   private final int id;
   private final TaskAttemptID mapId;
-  private final long size;
+  private long size;
   private final boolean primaryMapOutput;
   
   public MapOutput(TaskAttemptID mapId, long size, boolean primaryMapOutput) {
@@ -70,6 +70,10 @@ public abstract class MapOutput<K, V> {
 
   public long getSize() {
     return size;
+  }
+
+  public void setSize(long size) {
+    this.size = size;
   }
 
   public abstract void shuffle(MapHost host, InputStream input,

@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -29,7 +28,6 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 	private final Path tmpOutputPath;
 	private final Path outputPath;
 	private final MergeManagerImpl<K, V> merger;
-	private final OutputStream disk; 
 	private long compressedLength;
 	private long decompressedLength;
 	private long offset;
@@ -59,7 +57,6 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 		this.merger = merger;
 		this.outputPath = outputPath;
 		tmpOutputPath = getTempPath(outputPath, fetcher);
-		disk = fs.create(tmpOutputPath);
 		this.reduceId = reduceId;
 		this.conf = conf;
 	}
@@ -78,36 +75,26 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 		this.compressedLength = compressedLength;
 		this.decompressedLength = decompressedLength;
 		
-//		String baseUrl = host.getBaseUrl();
-//		URL url = new URL(baseUrl);
-//		String query = url.getQuery();
-//		String[] queries = query.split("&");
-		
 		String mapredLocalDir = conf.get(MRConfig.LOCAL_DIR);
 		String user = conf.getUser();
-		
-		String src = mapredLocalDir + "/../mapred/taskTracker/" + user + "/jobcache/"
-          + reduceId.getJobID().toString() + "/"
-          + reduceId.getTaskID().toString() + "/output/file.out";
-        
-        String src_idx = mapredLocalDir + "/../mapred/taskTracker/"+ user + "/jobcache/"
-          + reduceId.getJobID().toString() + "/"
-          + reduceId.getTaskID().toString() + "/output/file.out.index";
-        
-        // THIS CAN BE REMOVED AFTER TESTING
-        System.out.println("reduceId.getId()=" + reduceId.getId());
-        System.out.println("Looking for file.out at: " + src);
-        System.out.println("Looking for file.out.index at: " + src_idx);
+
+		String src = mapredLocalDir +  "/output/" + getMapId() + "/file.out";
+		String src_idx = mapredLocalDir + "/output/" + getMapId() + "/file.out.index";
         
         DataInputStream in = new DataInputStream(new FileInputStream(src_idx));
-        in.skipBytes(8*3*reduceId.getId());
-        offset = in.readLong();
-        long compressedSize = in.readLong();
-        long decompressedSize = in.readLong();
+
+		try {
+			in.skipBytes(8*3*reduceId.getTaskID().getId());
+			offset = in.readLong();
+			this.compressedLength = in.readLong();
+			this.decompressedLength = in.readLong();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		setSize(this.decompressedLength);
 		in.close();
 		
-		// THIS CAN BE REMOVED AFTER TESTING
-		System.out.println("offset=" + offset + ", compressedSize=" + compressedSize + ", decompressedSize=" + decompressedSize);
 
 		File f = new File(src);
 		if(f.exists()) { 
@@ -116,10 +103,11 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 
 		String lnCmd = conf.get("hadoop.ln.cmd");
 		String command = lnCmd + " " + src + " " + tmpOutputPath;
-		
+	
 		try {
 			LOG.debug("shuffleToLink: Command used for hardlink " + command);
 			Runtime.getRuntime().exec(command).waitFor();
+			
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
