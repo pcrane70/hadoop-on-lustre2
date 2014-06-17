@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DataInputBuffer;
 import org.apache.hadoop.io.RawComparator;
 import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.IFile.Reader;
 import org.apache.hadoop.mapred.IFile.Writer;
 import org.apache.hadoop.mapreduce.MRConfig;
@@ -261,8 +262,8 @@ public class Merger {
           this(conf, fs, file, segmentOffset, segmentLength, codec, preserve, 
               mergedMapOutputsCounter);
           this.rawDataLength = rawDataLength;
-        }
-    
+    }
+
     public Segment(Configuration conf, FileSystem fs, Path file,
                    long segmentOffset, long segmentLength,
                    CompressionCodec codec,
@@ -463,20 +464,31 @@ public class Merger {
       for (Path file : inputs) {
     	  
     	  long offset = 0;
-    	  long compressedLength;
+    	  long segmentLength;
+    	  long rawDataLength;
     	  if (file instanceof CompressAwarePath) {
     		  CompressAwarePath path = (CompressAwarePath) file;
     		  offset = path.getOffset();
-    		  compressedLength = path.getRawDataLength();
+    		  segmentLength = path.getCompressedSize();
+    		  rawDataLength = path.getRawDataLength();    		  
     	  } else {
-    		  compressedLength = fs.getFileStatus(file).getLen();
+    		  segmentLength = fs.getFileStatus(file).getLen();
+    		  rawDataLength = segmentLength;
     	  }
     	  
         LOG.debug("MergeQ: adding: " + file);
-        segments.add(new Segment<K, V>(conf, fs, file, offset, compressedLength, codec, !deleteInputs, 
+        
+        if (file.toString().endsWith(Task.MERGED_OUTPUT_PREFIX)) {
+        	segments.add(new Segment<K, V>(conf, fs, file, codec, !deleteInputs, 
+                    (file.toString().endsWith(
+                        Task.MERGED_OUTPUT_PREFIX) ? 
+                     null : mergedMapOutputsCounter), offset, segmentLength, rawDataLength));
+        } else {
+	        segments.add(new Segment<K, V>(conf, fs, file, offset, rawDataLength, codec, !deleteInputs, 
                                        (file.toString().endsWith(
                                            Task.MERGED_OUTPUT_PREFIX) ? 
                                         null : mergedMapOutputsCounter)));
+        }
       }
       
       // Sort segments on file-lengths
@@ -745,7 +757,6 @@ public class Merger {
           // Add the newly create segment to the list of segments to be merged
           Segment<K, V> tempSegment = 
             new Segment<K, V>(conf, fs, outputFile, codec, false);
-
           // Insert new merged segment into the sorted list
           int pos = Collections.binarySearch(segments, tempSegment,
                                              segmentComparator);
