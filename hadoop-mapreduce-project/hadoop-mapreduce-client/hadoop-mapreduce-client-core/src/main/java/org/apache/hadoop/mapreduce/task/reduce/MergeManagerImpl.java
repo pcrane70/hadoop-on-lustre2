@@ -770,11 +770,11 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
       rawBytes += (file.getRawDataLength() > 0) ? file.getRawDataLength() : fileLength;
       
       LOG.debug("Disk file: " + file + " Length is " + fileLength);
-
       
       Segment<K, V> s;
-      if (!file.toString().contains(Task.MERGED_OUTPUT_PREFIX)) {
-      s = new Segment<K, V>(job, fs, file, codec, keepInputs,
+      if (!file.toString().endsWith(Task.MERGED_OUTPUT_PREFIX)) {
+      
+      	s = new Segment<K, V>(job, fs, file, codec, keepInputs,
               (file.toString().endsWith(
                   Task.MERGED_OUTPUT_PREFIX) ?
                null : mergedMapOutputsCounter), file.getOffset(), file.getRawDataLength(), file.getRawDataLength()
