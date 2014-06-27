@@ -573,7 +573,7 @@ public class ShuffleHandler extends AuxiliaryService {
       // TODO: Once Shuffle is out of NM, this can use MR APIs to convert
       // between App and Job
       String outputBasePathStr = getBaseLocation(jobId, user);
-
+	System.out.println("ShuffleHandler.messageReceived(): outputBasePathStr=" + outputBasePathStr);
       try {
         populateHeaders(mapIds, outputBasePathStr, user, reduceId, request,
           response, keepAliveParam, mapOutputInfoMap);
@@ -664,7 +664,8 @@ public class ShuffleHandler extends AuxiliaryService {
         // Index file
         Path indexFileName =
             lDirAlloc.getLocalPathToRead(base + "/file.out.index", conf);
-        IndexRecord info =
+        System.out.println("ShuffleHandler.populateHeaders(): indexFileName=" + indexFileName.toString());
+	IndexRecord info =
             indexCache.getIndexInformation(mapId, reduce, indexFileName, user);
         ShuffleHeader header =
             new ShuffleHeader(mapId, info.partLength, info.rawLength, reduce);

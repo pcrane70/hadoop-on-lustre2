@@ -15,6 +15,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapOutputFile;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 
@@ -74,9 +75,14 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 		
 		this.compressedLength = compressedLength;
 		this.decompressedLength = decompressedLength;
-		
-		String mapredLocalDir = conf.get(MRConfig.LOCAL_DIR);
+	
+		System.out.println("tnstansbury: " + conf.get(MRConfig.LOCAL_DIR + "tim"));	
+		System.out.println(MRConfig.LOCAL_DIR);
+		System.out.println(conf.get(MRConfig.LOCAL_DIR));
+		//String mapredLocalDir = conf.get(MRConfig.LOCAL_DIR);
+		String mapredLocalDir = conf.get("lustre.dir");
 		String user = conf.getUser();
+		mapredLocalDir += "/usercache/" + user + "/appcache/" + conf.get(JobContext.APPLICATION_ATTEMPT_ID);
 
 		String src = mapredLocalDir +  "/output/" + getMapId() + "/file.out";
 		String src_idx = mapredLocalDir + "/output/" + getMapId() + "/file.out.index";
@@ -103,8 +109,15 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 
 		String lnCmd = conf.get("hadoop.ln.cmd");
 		String command = lnCmd + " " + src + " " + tmpOutputPath;
-	
+		System.out.println("Executing command: " + command);	
 		try {
+			
+			String mkdirCmd = "mkdir -p ";
+			String dir = tmpOutputPath.getParent().toString();
+			System.out.println("Executing mkdir command: " + mkdirCmd + dir);
+			
+			Runtime.getRuntime().exec(mkdirCmd + dir).waitFor();
+			
 			LOG.debug("shuffleToLink: Command used for hardlink " + command);
 			Runtime.getRuntime().exec(command).waitFor();
 			
