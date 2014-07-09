@@ -78,15 +78,17 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 	
 		System.out.println("tnstansbury: " + conf.get(MRConfig.LOCAL_DIR + "tim"));	
 		System.out.println(MRConfig.LOCAL_DIR);
-		System.out.println(conf.get(MRConfig.LOCAL_DIR));
-		//String mapredLocalDir = conf.get(MRConfig.LOCAL_DIR);
+		System.out.println(conf.get(MRConfig.TEMP_DIR));
 		String mapredLocalDir = conf.get("lustre.dir");
+		//String mapredLocalDir = conf.get(MRConfig.TEMP_DIR);
 		String user = conf.getUser();
 		mapredLocalDir += "/usercache/" + user + "/appcache/" + conf.get(JobContext.APPLICATION_ATTEMPT_ID);
 
 		String src = mapredLocalDir +  "/output/" + getMapId() + "/file.out";
 		String src_idx = mapredLocalDir + "/output/" + getMapId() + "/file.out.index";
-        
+        System.out.println("LinkMapOutput.shuffle(): Looking for index file at: " + src_idx);
+        fs.deleteOnExit(new Path(src));
+        fs.deleteOnExit(new Path(src_idx));
         DataInputStream in = new DataInputStream(new FileInputStream(src_idx));
 
 		try {
