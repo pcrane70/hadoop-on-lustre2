@@ -1483,7 +1483,8 @@ public class MapTask extends Task {
       kvbuffer = null;
       mergeParts();
       Path outputPath = mapOutputFile.getOutputFile();
-      fileOutputByteCounter.increment(rfs.getFileStatus(outputPath).getLen());
+      System.out.println("MapTask.flush(): outputPath to read=" + outputPath.toString());
+	fileOutputByteCounter.increment(rfs.getFileStatus(outputPath).getLen());
     }
 
     public void close() { }
@@ -1565,7 +1566,8 @@ public class MapTask extends Task {
         final SpillRecord spillRec = new SpillRecord(partitions);
         final Path filename =
             mapOutputFile.getSpillFileForWrite(numSpills, size);
-        out = rfs.create(filename);
+        System.out.println("MapTask.sortAndSpill(): SpillFileForWrite=" + filename.toString());
+	out = rfs.create(filename);
 
         final int mstart = kvend / NMETA;
         final int mend = 1 + // kvend is a valid record
@@ -1786,6 +1788,8 @@ public class MapTask extends Task {
         filename[i] = mapOutputFile.getSpillFile(i);
         finalOutFileSize += rfs.getFileStatus(filename[i]).getLen();
       }
+	System.out.println("MapTask.mergeParts(): numSpills=" + numSpills);
+	System.out.println("MapTask.mergeParts(): indexCacheListSize=" + indexCacheList.size());
       if (numSpills == 1) { //the spill is the final output
         sameVolRename(filename[0],
             mapOutputFile.getOutputFileForWriteInVolume(filename[0]));
@@ -1814,6 +1818,9 @@ public class MapTask extends Task {
           mapOutputFile.getOutputFileForWrite(finalOutFileSize);
       Path finalIndexFile =
           mapOutputFile.getOutputIndexFileForWrite(finalIndexFileSize);
+
+	System.out.println("MapTask.mergeParts(): finalOutputFile for write=" + finalOutputFile.toString());
+	System.out.println("MapTask.mergeParts(): finalIndexFile for write=" + finalIndexFile.toString());
 
       //The output stream for the final single output file
       FSDataOutputStream finalOut = rfs.create(finalOutputFile, true, 4096);
@@ -1925,10 +1932,21 @@ public class MapTask extends Task {
               + dst + ": couldn't create parent directory"); 
         }
       }
-      
-      if (!src.renameTo(dst)) {
-        throw new IOException("Unable to rename " + src + " to " + dst);
-      }
+    
+try {
+      Process myProc = Runtime.getRuntime().exec("mv " + src.toString() + " " + dst.toString());
+		
+			myProc.waitFor();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new IOException("Unable to rename " + src + " to " + dst);
+		}
+  
+      //if (!src.renameTo(dst)) {
+//	System.out.println("MapTask.sameVolRename(): src=" + src.toString() + " dst=" + dst.toString());
+ //       throw new IOException("Unable to rename " + src + " to " + dst);
+  //    }
     }
   } // MapOutputBuffer
   
