@@ -72,10 +72,6 @@ public abstract class MapOutput<K, V> {
     return size;
   }
 
-  public void setSize(long size) {
-    this.size = size;
-  }
-
   public abstract void shuffle(MapHost host, InputStream input,
                                long compressedLength,
                                long decompressedLength,

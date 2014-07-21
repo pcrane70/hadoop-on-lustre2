@@ -85,24 +85,7 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 		mapredLocalDir += "/usercache/" + user + "/appcache/" + conf.get(JobContext.APPLICATION_ATTEMPT_ID);
 
 		String src = mapredLocalDir +  "/output/" + getMapId() + "/file.out";
-		String src_idx = mapredLocalDir + "/output/" + getMapId() + "/file.out.index";
-        System.out.println("LinkMapOutput.shuffle(): Looking for index file at: " + src_idx);
         fs.deleteOnExit(new Path(src));
-        fs.deleteOnExit(new Path(src_idx));
-        DataInputStream in = new DataInputStream(new FileInputStream(src_idx));
-
-		try {
-			in.skipBytes(8*3*reduceId.getTaskID().getId());
-			offset = in.readLong();
-			this.compressedLength = in.readLong();
-			this.decompressedLength = in.readLong();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		setSize(this.decompressedLength);
-		in.close();
-		
 
 		File f = new File(src);
 		if(f.exists()) { 
@@ -126,6 +109,10 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void setOffset(long offset) {
+		this.offset = offset;
 	}
 
 	@Override

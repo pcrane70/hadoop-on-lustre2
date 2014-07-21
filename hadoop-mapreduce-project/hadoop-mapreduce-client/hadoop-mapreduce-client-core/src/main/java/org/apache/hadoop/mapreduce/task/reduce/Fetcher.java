@@ -18,6 +18,7 @@
 package org.apache.hadoop.mapreduce.task.reduce;
 
 import java.io.DataInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
@@ -35,10 +36,13 @@ import javax.net.ssl.HttpsURLConnection;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapred.Counters;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.MRJobConfig;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
@@ -89,6 +93,8 @@ class Fetcher<K,V> extends Thread {
 
   private static boolean sslShuffle;
   private static SSLFactory sslFactory;
+  
+  private final JobConf conf;
 
   public Fetcher(JobConf job, TaskAttemptID reduceId, 
                  ShuffleSchedulerImpl<K,V> scheduler, MergeManager<K,V> merger,
@@ -104,6 +110,7 @@ class Fetcher<K,V> extends Thread {
                  Reporter reporter, ShuffleClientMetrics metrics,
                  ExceptionReporter exceptionReporter, SecretKey shuffleKey,
                  int id) {
+	conf = job;
     this.reporter = reporter;
     this.scheduler = scheduler;
     this.merger = merger;
@@ -255,82 +262,6 @@ class Fetcher<K,V> extends Thread {
     // List of maps to be fetched yet
     Set<TaskAttemptID> remaining = new HashSet<TaskAttemptID>(maps);
     
-    // Construct the url and connect
-//    DataInputStream input = null;
-//    try {
-//      URL url = getMapOutputURL(host, maps);
-//      openConnection(url);
-//      if (stopped) {
-//        abortConnect(host, remaining);
-//        return;
-//      }
-//      
-//      // generate hash of the url
-//      String msgToEncode = SecureShuffleUtils.buildMsgFrom(url);
-//      String encHash = SecureShuffleUtils.hashFromString(msgToEncode,
-//          shuffleSecretKey);
-//      
-//      // put url hash into http header
-//      connection.addRequestProperty(
-//          SecureShuffleUtils.HTTP_HEADER_URL_HASH, encHash);
-//      // set the read timeout
-//      connection.setReadTimeout(readTimeout);
-//      // put shuffle version into http header
-//      connection.addRequestProperty(ShuffleHeader.HTTP_HEADER_NAME,
-//          ShuffleHeader.DEFAULT_HTTP_HEADER_NAME);
-//      connection.addRequestProperty(ShuffleHeader.HTTP_HEADER_VERSION,
-//          ShuffleHeader.DEFAULT_HTTP_HEADER_VERSION);
-//      connect(connection, connectionTimeout);
-//      // verify that the thread wasn't stopped during calls to connect
-//      if (stopped) {
-//        abortConnect(host, remaining);
-//        return;
-//      }
-//      input = new DataInputStream(connection.getInputStream());
-//
-//      // Validate response code
-//      int rc = connection.getResponseCode();
-//      if (rc != HttpURLConnection.HTTP_OK) {
-//        throw new IOException(
-//            "Got invalid response code " + rc + " from " + url +
-//            ": " + connection.getResponseMessage());
-//      }
-//      // get the shuffle version
-//      if (!ShuffleHeader.DEFAULT_HTTP_HEADER_NAME.equals(
-//          connection.getHeaderField(ShuffleHeader.HTTP_HEADER_NAME))
-//          || !ShuffleHeader.DEFAULT_HTTP_HEADER_VERSION.equals(
-//              connection.getHeaderField(ShuffleHeader.HTTP_HEADER_VERSION))) {
-//        throw new IOException("Incompatible shuffle response version");
-//      }
-//      // get the replyHash which is HMac of the encHash we sent to the server
-//      String replyHash = connection.getHeaderField(SecureShuffleUtils.HTTP_HEADER_REPLY_URL_HASH);
-//      if(replyHash==null) {
-//        throw new IOException("security validation of TT Map output failed");
-//      }
-//      LOG.debug("url="+msgToEncode+";encHash="+encHash+";replyHash="+replyHash);
-//      // verify that replyHash is HMac of encHash
-//      SecureShuffleUtils.verifyReply(replyHash, encHash, shuffleSecretKey);
-//      LOG.info("for url="+msgToEncode+" sent hash and received reply");
-//    } catch (IOException ie) {
-//      boolean connectExcpt = ie instanceof ConnectException;
-//      ioErrs.increment(1);
-//      LOG.warn("Failed to connect to " + host + " with " + remaining.size() + 
-//               " map outputs", ie);
-//
-//      // If connect did not succeed, just mark all the maps as failed,
-//      // indirectly penalizing the host
-//      for(TaskAttemptID left: remaining) {
-//        scheduler.copyFailed(left, host, false, connectExcpt);
-//      }
-//     
-//      // Add back all the remaining maps, WITHOUT marking them as failed
-//      for(TaskAttemptID left: remaining) {
-//        scheduler.putBackKnownMapOutput(host, left);
-//      }
-//      
-//      return;
-//    }
-    
     try {
       // Loop through available map-outputs and fetch them
       // On any error, faildTasks is not null and we exit
@@ -376,39 +307,29 @@ class Fetcher<K,V> extends Thread {
     TaskAttemptID mapId = remaining.iterator().next();
     long decompressedLength = -1;
     long compressedLength = -1;
+    long offset = -1;
     
     try {
-//      long startTime = System.currentTimeMillis();
-//      int forReduce = -1;
-//      //Read the shuffle header
-//      try {
-//        ShuffleHeader header = new ShuffleHeader();
-//        header.readFields(input);
-//        mapId = TaskAttemptID.forName(header.mapId);
-//        compressedLength = header.compressedLength;
-//        decompressedLength = header.uncompressedLength;
-//        forReduce = header.forReduce;
-//      } catch (IllegalArgumentException e) {
-//        badIdErrs.increment(1);
-//        LOG.warn("Invalid map id ", e);
-//        //Don't know which one was bad, so consider all of them as bad
-//        return remaining.toArray(new TaskAttemptID[remaining.size()]);
-//      }
-
- 
-      // Do some basic sanity verification
-//      if (!verifySanity(compressedLength, decompressedLength, forReduce,
-//          remaining, mapId)) {
-//        return new TaskAttemptID[] {mapId};
-//      }
       
-//      if(LOG.isDebugEnabled()) {
-//        LOG.debug("header: " + mapId + ", len: " + compressedLength + 
-//            ", decomp len: " + decompressedLength);
-//      }
-      
-      // Get the location for the map output - either in-memory or on-disk
+      // Build the path to the index file
+	  String mapredLocalDir = conf.get("lustre.dir");
+	  String user = conf.getUser();
+	  mapredLocalDir += "/usercache/" + user + "/appcache/" + conf.get(JobContext.APPLICATION_ATTEMPT_ID);
+	  String src_idx = mapredLocalDir + "/output/" + mapId + "/file.out.index";
+	  
+	  // Ensure that the index file will be deleted when the job is complete
+	  FileSystem fs = FileSystem.getLocal(conf);
+	  fs.deleteOnExit(new Path(src_idx));
+		
+	  DataInputStream in = new DataInputStream(new FileInputStream(src_idx));
+	  in.skipBytes(8*3*reduce);
+	  offset = in.readLong();
+	  compressedLength = in.readLong();
+	  decompressedLength = in.readLong();
+	  in.close();
+    	
       try {
+    	// Get the location for the map output - either in-memory or on-disk
         mapOutput = merger.reserve(mapId, decompressedLength, id);
       } catch (IOException ioe) {
         // kill this reduce attempt
@@ -422,18 +343,21 @@ class Fetcher<K,V> extends Thread {
         LOG.info("fetcher#" + id + " - MergeManager returned status WAIT ...");
         //Not an error but wait to process data.
         return EMPTY_ATTEMPT_ID_ARRAY;
-      } 
+      } else {
+    	  if (mapOutput instanceof LinkMapOutput) {
+    		  ((LinkMapOutput<K, V>) mapOutput).setOffset(offset);
+    	  }
+      }
       
       // The codec for lz0,lz4,snappy,bz2,etc. throw java.lang.InternalError
       // on decompression failures. Catching and re-throwing as IOException
       // to allow fetch failure logic to be processed
       try {
         // Go!
-//        LOG.info("fetcher#" + id + " about to shuffle output of map "
-//            + mapOutput.getMapId() + " decomp: " + decompressedLength
-//            + " len: " + compressedLength + " to " + mapOutput.getDescription());
-    	  LOG.info("fetcher#" + id + " about to shuffle output of map "
-    			  + mapOutput.getMapId() + " to " + mapOutput.getDescription());
+        LOG.info("fetcher#" + id + " about to shuffle output of map "
+            + mapOutput.getMapId() + " decomp: " + decompressedLength
+            + " len: " + compressedLength + " to " + mapOutput.getDescription());
+
         mapOutput.shuffle(host, input, compressedLength, decompressedLength,
             metrics, reporter);
       } catch (java.lang.InternalError e) {
@@ -452,17 +376,6 @@ class Fetcher<K,V> extends Thread {
       return null;
     } catch (IOException ioe) {
       ioErrs.increment(1);
-//      if (mapId == null || mapOutput == null) {
-      if (mapOutput == null) {
-        //LOG.info("fetcher#" + id + " failed to read map header" + 
-        //         mapId + " decomp: " + 
-        //         decompressedLength + ", " + compressedLength, ioe);
-        //if(mapId == null) {
-        //  return remaining.toArray(new TaskAttemptID[remaining.size()]);
-        //} else {
-          return new TaskAttemptID[] {mapId};
-        //}
-      }
       
       LOG.warn("Failed to shuffle output of " + mapId + 
                " from " + host.getHostName(), ioe); 

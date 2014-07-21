@@ -250,18 +250,27 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
                                              long requestedSize,
                                              int fetcher
                                              ) throws IOException {
+	
+	  if (jobConf.getBoolean("test.shuffle", false)) {
 	  
-	  if (requestedSize == -1) {
-		  return new LinkMapOutput<K, V>(mapId, reduceId, this, requestedSize, jobConf,
-				  mapOutputFile, fetcher, true);
+		  if (jobConf.getBoolean("shuffle.to.disk", false)) {
+			  return new LinkMapOutput<K, V>(mapId, reduceId, this, requestedSize, jobConf,
+					  mapOutputFile, fetcher, true);
+		  } else {
+			  usedMemory += requestedSize;
+			  boolean primaryMapOutput = true;
+			    return new InMemoryMapOutput<K,V>(jobConf, mapId, this, (int)requestedSize,
+			                                      codec, primaryMapOutput);
+		  }
 	  }
 	  
     if (!canShuffleToMemory(requestedSize)) {
       LOG.info(mapId + ": Shuffling to disk since " + requestedSize + 
                " is greater than maxSingleShuffleLimit (" + 
                maxSingleShuffleLimit + ")");
-      return new OnDiskMapOutput<K,V>(mapId, reduceId, this, requestedSize,
-                                      jobConf, mapOutputFile, fetcher, true);
+      
+      return new LinkMapOutput<K, V>(mapId, reduceId, this, requestedSize, jobConf,
+			  mapOutputFile, fetcher, true);
     }
     
     // Stall shuffle if we are above the memory limit
