@@ -206,10 +206,12 @@ public class TeraSort extends Configured implements Tool {
     }
 
     public void setConf(Configuration conf) {
+      
       try {
         FileSystem fs = FileSystem.getLocal(conf);
+        Path outputPath = TeraOutputFormat.getOutputPath(Job.getInstance(conf));
         this.conf = conf;
-        Path partFile = new Path(TeraInputFormat.PARTITION_FILENAME);
+        Path partFile = new Path(outputPath, TeraInputFormat.PARTITION_FILENAME);
         splitPoints = readPartitions(fs, partFile, conf);
         trie = buildTrie(splitPoints, 0, splitPoints.length, new Text(), 2);
       } catch (IOException ie) {
