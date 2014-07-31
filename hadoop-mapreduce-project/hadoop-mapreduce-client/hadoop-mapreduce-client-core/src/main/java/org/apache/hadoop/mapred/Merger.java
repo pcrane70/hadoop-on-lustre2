@@ -484,7 +484,7 @@ public class Merger {
                         Task.MERGED_OUTPUT_PREFIX) ? 
                      null : mergedMapOutputsCounter), offset, segmentLength, rawDataLength));
         } else {
-	        segments.add(new Segment<K, V>(conf, fs, file, offset, rawDataLength, codec, !deleteInputs, 
+	        segments.add(new Segment<K, V>(conf, fs, file, offset, segmentLength, codec, !deleteInputs, 
                                        (file.toString().endsWith(
                                            Task.MERGED_OUTPUT_PREFIX) ? 
                                         null : mergedMapOutputsCounter)));
