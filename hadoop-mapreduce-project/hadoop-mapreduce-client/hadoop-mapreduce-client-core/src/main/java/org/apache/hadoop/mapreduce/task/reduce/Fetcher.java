@@ -324,8 +324,8 @@ class Fetcher<K,V> extends Thread {
 	  DataInputStream in = new DataInputStream(new FileInputStream(src_idx));
 	  in.skipBytes(8*3*reduce);
 	  offset = in.readLong();
-	  compressedLength = in.readLong();
 	  decompressedLength = in.readLong();
+	  compressedLength = in.readLong();
 	  in.close();
     	
       try {
@@ -357,7 +357,6 @@ class Fetcher<K,V> extends Thread {
         LOG.info("fetcher#" + id + " about to shuffle output of map "
             + mapOutput.getMapId() + " decomp: " + decompressedLength
             + " len: " + compressedLength + " to " + mapOutput.getDescription());
-
         mapOutput.shuffle(host, input, compressedLength, decompressedLength,
             metrics, reporter);
       } catch (java.lang.InternalError e) {

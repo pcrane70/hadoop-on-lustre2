@@ -24,7 +24,7 @@ import com.google.common.annotations.VisibleForTesting;
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
 public class LinkMapOutput<K, V> extends MapOutput<K, V> {
-	private static final Log LOG = LogFactory.getLog(OnDiskMapOutput.class);
+	private static final Log LOG = LogFactory.getLog(LinkMapOutput.class);
 	private final FileSystem fs;
 	private final Path tmpOutputPath;
 	private final Path outputPath;

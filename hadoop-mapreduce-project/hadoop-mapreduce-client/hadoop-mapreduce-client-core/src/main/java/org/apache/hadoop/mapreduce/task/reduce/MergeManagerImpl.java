@@ -259,8 +259,8 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
 		  } else {
 			  usedMemory += requestedSize;
 			  boolean primaryMapOutput = true;
-			    return new InMemoryMapOutput<K,V>(jobConf, mapId, this, (int)requestedSize,
-			                                      codec, primaryMapOutput);
+			  return new InMemoryLinkMapOutput<K, V>(jobConf, mapId, this,
+						(int) requestedSize, codec, primaryMapOutput);
 		  }
 	  }
 	  
@@ -786,7 +786,7 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
       	s = new Segment<K, V>(job, fs, file, codec, keepInputs,
               (file.toString().endsWith(
                   Task.MERGED_OUTPUT_PREFIX) ?
-               null : mergedMapOutputsCounter), file.getOffset(), file.getRawDataLength(), file.getRawDataLength()
+               null : mergedMapOutputsCounter), file.getOffset(), file.getCompressedSize(), file.getRawDataLength()
              );
       } else {
         s = new Segment<K, V>(job, fs, file, codec, keepInputs,
