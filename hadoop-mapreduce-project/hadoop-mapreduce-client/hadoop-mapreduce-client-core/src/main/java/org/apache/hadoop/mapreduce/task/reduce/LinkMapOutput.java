@@ -79,13 +79,25 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 		System.out.println("tnstansbury: " + conf.get(MRConfig.LOCAL_DIR + "tim"));	
 		System.out.println(MRConfig.LOCAL_DIR);
 		System.out.println(conf.get(MRConfig.TEMP_DIR));
-		String mapredLocalDir = conf.get("lustre.dir");
+		//String mapredLocalDir = conf.get("lustre.dir");
 		//String mapredLocalDir = conf.get(MRConfig.TEMP_DIR);
-		String user = conf.getUser();
-		mapredLocalDir += "/usercache/" + user + "/appcache/" + conf.get(JobContext.APPLICATION_ATTEMPT_ID);
+		//String user = conf.getUser();
+		//mapredLocalDir += "/usercache/" + user + "/appcache/" + conf.get(JobContext.APPLICATION_ATTEMPT_ID);
 
-		String src = mapredLocalDir +  "/output/" + getMapId() + "/file.out";
-        fs.deleteOnExit(new Path(src));
+        String mapHostName = host.getHostName().split(":")[0];
+        String app_path = conf.get(MRConfig.LOCAL_DIR);
+        LOG.debug("original app_path " + app_path);
+        String[] app_path_parts = app_path.split("/");
+        app_path_parts[app_path_parts.length-5] = mapHostName;
+        StringBuilder builder = new StringBuilder();
+        for(String s : app_path_parts) {
+          builder.append(s);
+          builder.append("/");
+        }
+        app_path = builder.toString();
+
+        String src = app_path +  "output/" + getMapId() + "/file.out";
+        //fs.deleteOnExit(new Path(src));
 
 		File f = new File(src);
 		if(f.exists()) { 
@@ -93,12 +105,12 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 		}
 
 		String lnCmd = conf.get("hadoop.ln.cmd");
-		String command = lnCmd + " " + src + " " + tmpOutputPath;
+        String command = lnCmd + " " + src + " " + outputPath;
 		System.out.println("Executing command: " + command);	
 		try {
 			
 			String mkdirCmd = "mkdir -p ";
-			String dir = tmpOutputPath.getParent().toString();
+            String dir = outputPath.getParent().toString();
 			System.out.println("Executing mkdir command: " + mkdirCmd + dir);
 			
 			Runtime.getRuntime().exec(mkdirCmd + dir).waitFor();
@@ -117,7 +129,6 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 
 	@Override
 	public void commit() throws IOException {
-		fs.rename(tmpOutputPath, outputPath);
 		// Still need to get the offset right here and add it to compressAwarePath
 		CompressAwarePath compressAwarePath = new CompressAwarePath(outputPath,
 				getSize(), this.compressedLength, this.offset);

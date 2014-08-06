@@ -72,10 +72,10 @@ System.out.println("YarnOutputFiles.getAttemptOutputDir(): path=" + p.toString()
       new Path(getAttemptOutputDir(), MAP_OUTPUT_FILENAME_STRING);
 	System.out.println("YarnOutputFiles.getOutputFile(): attemptOutput=" + attemptOutput.toString());
 
-	String lustreDir = conf.get("lustre.dir");
-	String user = conf.getUser();
-	String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
-	Path myPath = new Path(lustreDir + "/usercache/" + user + "/appcache/" + application + "/" + attemptOutput);    
+//	String lustreDir = conf.get("lustre.dir");
+//	String user = conf.getUser();
+//	String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
+	Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptOutput);    
 	System.out.println("YarnOutputFiles.getOutputFile(): myPath=" + myPath.toString());
 	return myPath;
 //return lDirAlloc.getLocalPathToRead(attemptOutput.toString(), conf);
@@ -92,10 +92,10 @@ System.out.println("YarnOutputFiles.getAttemptOutputDir(): path=" + p.toString()
     Path attemptOutput = 
       new Path(getAttemptOutputDir(), MAP_OUTPUT_FILENAME_STRING);
 
-	String lustreDir = conf.get("lustre.dir");
-        String user = conf.getUser();
-        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
-        Path myPath = new Path(lustreDir + "/usercache/" + user + "/appcache/" + application + "/" + attemptOutput);
+//	String lustreDir = conf.get("lustre.dir");
+//        String user = conf.getUser();
+//        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
+        Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptOutput);
         System.out.println("YarnOutputFiles.getOutputFileForWrite(): myPath=" + myPath.toString());
         return myPath;  
   
@@ -112,10 +112,10 @@ System.out.println("YarnOutputFiles.getAttemptOutputDir(): path=" + p.toString()
         conf.get(JobContext.TASK_ATTEMPT_ID));
 System.out.println("conf.getJobName()=" + conf.getJobName());
 System.out.println("conf.getJobLocalDir=" + conf.getJobLocalDir());
-	String lustreDir = conf.get("lustre.dir");
-        String user = conf.getUser();
-        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
-        Path myPath = new Path(lustreDir + "/usercache/" + user + "/appcache/" + application + "/" + attemptOutputDir, MAP_OUTPUT_FILENAME_STRING);
+//	String lustreDir = conf.get("lustre.dir");
+//        String user = conf.getUser();
+//        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
+        Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptOutputDir, MAP_OUTPUT_FILENAME_STRING);
         System.out.println("YarnOutputFiles.getOutputFileForWriteInVolume(): myPath=" + myPath.toString());
         return myPath;
 
@@ -132,11 +132,11 @@ System.out.println("conf.getJobLocalDir=" + conf.getJobLocalDir());
     Path attemptIndexOutput =
       new Path(getAttemptOutputDir(), MAP_OUTPUT_FILENAME_STRING +
                                       MAP_OUTPUT_INDEX_SUFFIX_STRING);
-
-	String lustreDir = conf.get("lustre.dir");
-        String user = conf.getUser();
-        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
-        Path myPath = new Path(lustreDir + "/usercache/" + user + "/appcache/" + application + "/" + attemptIndexOutput);
+//
+//	String lustreDir = conf.get("lustre.dir");
+//        String user = conf.getUser();
+//        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
+        Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptIndexOutput);
         System.out.println("YarnOutputFiles.getOutputIndexFile(): myPath=" + myPath.toString());
         return myPath;
 
@@ -155,10 +155,10 @@ System.out.println("conf.getJobLocalDir=" + conf.getJobLocalDir());
       new Path(getAttemptOutputDir(), MAP_OUTPUT_FILENAME_STRING +
                                       MAP_OUTPUT_INDEX_SUFFIX_STRING);
 
-	String lustreDir = conf.get("lustre.dir");
-        String user = conf.getUser();
-        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
-        Path myPath = new Path(lustreDir + "/usercache/" + user + "/appcache/" + application + "/" + attemptIndexOutput);
+//	String lustreDir = conf.get("lustre.dir");
+//        String user = conf.getUser();
+//        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
+        Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptIndexOutput);
         System.out.println("YarnOutputFiles.getOutputIndexFileForWrite(): myPath=" + myPath.toString());
         return myPath;    
 
@@ -175,10 +175,10 @@ System.out.println("conf.getJobLocalDir=" + conf.getJobLocalDir());
       Path attemptOutputDir = new Path(JOB_OUTPUT_DIR,
         conf.get(JobContext.TASK_ATTEMPT_ID));
 
-	String lustreDir = conf.get("lustre.dir");
-        String user = conf.getUser();
-        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
-        Path myPath = new Path(lustreDir + "/usercache/" + user + "/appcache/" + application + "/" + attemptOutputDir, MAP_OUTPUT_FILENAME_STRING+MAP_OUTPUT_INDEX_SUFFIX_STRING);
+//	String lustreDir = conf.get("lustre.dir");
+//        String user = conf.getUser();
+//        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
+        Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptOutputDir, MAP_OUTPUT_FILENAME_STRING+MAP_OUTPUT_INDEX_SUFFIX_STRING);
         System.out.println("YarnOutputFiles.getOutputIndexFileForWriteInVolume(): myPath=" + myPath.toString());
         return myPath;
 
@@ -264,8 +264,8 @@ System.out.println("conf.getJobLocalDir=" + conf.getJobLocalDir());
   public Path getInputFileForWrite(org.apache.hadoop.mapreduce.TaskID mapId,
       long size) throws IOException {
 	  
-	  String path = conf.get("lustre.dir");
-	  path += "/usercache/" + conf.getUser() + "/appcache/" + conf.get(JobContext.APPLICATION_ATTEMPT_ID) + "/";
+//	  String path = conf.get("lustre.dir");
+	  String path = conf.get(MRConfig.LOCAL_DIR) + "/";
 	  
 	  String outputPart = String.format(REDUCE_INPUT_FILE_FORMAT_STRING, getAttemptOutputDir().toString(), mapId.getId());
 	  Path p = new Path(path, outputPart);

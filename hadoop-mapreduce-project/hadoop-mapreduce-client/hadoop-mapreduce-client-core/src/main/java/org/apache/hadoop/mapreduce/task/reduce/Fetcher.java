@@ -312,14 +312,26 @@ class Fetcher<K,V> extends Thread {
     try {
       
       // Build the path to the index file
-	  String mapredLocalDir = conf.get("lustre.dir");
-	  String user = conf.getUser();
-	  mapredLocalDir += "/usercache/" + user + "/appcache/" + conf.get(JobContext.APPLICATION_ATTEMPT_ID);
-	  String src_idx = mapredLocalDir + "/output/" + mapId + "/file.out.index";
+	  //String mapredLocalDir = conf.get("lustre.dir");
+	  //String user = conf.getUser();
+	  //mapredLocalDir += "/usercache/" + user + "/appcache/" + conf.get(JobContext.APPLICATION_ATTEMPT_ID);
+
+      String mapHostName = host.getHostName().split(":")[0];
+      String app_path = conf.get(MRConfig.LOCAL_DIR);
+      LOG.debug("original app_path " + app_path);
+      String[] app_path_parts = app_path.split("/");
+      app_path_parts[app_path_parts.length-5] = mapHostName;
+      StringBuilder builder = new StringBuilder();
+      for(String s : app_path_parts) {
+          builder.append(s);
+          builder.append("/");
+      }
+      app_path = builder.toString();
+      String src_idx = app_path + "output/" + mapId + "/file.out.index";
 	  
 	  // Ensure that the index file will be deleted when the job is complete
-	  FileSystem fs = FileSystem.getLocal(conf);
-	  fs.deleteOnExit(new Path(src_idx));
+	  //FileSystem fs = FileSystem.getLocal(conf);
+	  //fs.deleteOnExit(new Path(src_idx));
 		
 	  DataInputStream in = new DataInputStream(new FileInputStream(src_idx));
 	  in.skipBytes(8*3*reduce);
@@ -346,7 +358,9 @@ class Fetcher<K,V> extends Thread {
       } else {
     	  if (mapOutput instanceof LinkMapOutput) {
     		  ((LinkMapOutput<K, V>) mapOutput).setOffset(offset);
-    	  }
+    	  }else if (mapOutput instanceof InMemoryLinkMapOutput){
+              ((InMemoryLinkMapOutput<K, V>) mapOutput).setOffset(offset);
+          }
       }
       
       // The codec for lz0,lz4,snappy,bz2,etc. throw java.lang.InternalError

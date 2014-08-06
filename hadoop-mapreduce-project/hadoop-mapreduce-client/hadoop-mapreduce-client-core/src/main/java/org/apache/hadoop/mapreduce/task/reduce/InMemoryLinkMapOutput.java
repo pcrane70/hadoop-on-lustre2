@@ -38,6 +38,7 @@ import org.apache.hadoop.mapred.IFileInputStream;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 
 @InterfaceAudience.Private
@@ -87,17 +88,19 @@ class InMemoryLinkMapOutput<K, V> extends InMemoryMapOutput<K, V> {
 			long decompressedLength, ShuffleClientMetrics metrics,
 			Reporter reporter) throws IOException {
 
-		String mapredLocalDir = conf.get("lustre.dir");
-		// String mapredLocalDir = conf.get(MRConfig.TEMP_DIR);
-		String user = conf.getUser();
-		mapredLocalDir += "/usercache/" + user + "/appcache/"
-				+ conf.get(JobContext.APPLICATION_ATTEMPT_ID);
+        String mapHostName = host.getHostName().split(":")[0];
+        String app_path = conf.get(MRConfig.LOCAL_DIR);
+        LOG.debug("original app_path " + app_path);
+        String[] app_path_parts = app_path.split("/");
+        app_path_parts[app_path_parts.length-5] = mapHostName;
+        StringBuilder builder = new StringBuilder();
+        for(String s : app_path_parts) {
+          builder.append(s);
+          builder.append("/");
+        }
+        app_path = builder.toString();
+        String src = app_path +  "output/" + getMapId() + "/file.out";
 
-		String src = mapredLocalDir + "/output/" + getMapId() + "/file.out";
-
-		// TO-DO: Do we need to delete the file on exit?
-		FileSystem fs = FileSystem.getLocal(conf);
-		fs.deleteOnExit(new Path(src));
 
 		File f = new File(src);
 		if (f.exists()) {
@@ -107,6 +110,8 @@ class InMemoryLinkMapOutput<K, V> extends InMemoryMapOutput<K, V> {
 		LOG.debug("src file size: "+f.length());
 		
 		input = new FileInputStream(src);
+        input.skip(offset);
+
 		IFileInputStream checksumIn = new IFileInputStream(input,
 				compressedLength, conf);
 
@@ -125,11 +130,9 @@ class InMemoryLinkMapOutput<K, V> extends InMemoryMapOutput<K, V> {
 			LOG.debug("decompressedLength: " + decompressedLength);
 
 			// TO-DO: would offset and length be OK to be int?
-			IOUtils.readFully(input, memory, (int) offset, memory.length);
+			IOUtils.readFully(input, memory, 0, memory.length);
 			metrics.inputBytes((int) memory.length);
 			reporter.progress();
-			LOG.info("Read " + memory.length + " bytes from map-output for "
-					+ getMapId());
 			LOG.info("Read " + memory.length + " bytes from map-output for "
 					+ getMapId());
 
@@ -139,12 +142,12 @@ class InMemoryLinkMapOutput<K, V> extends InMemoryMapOutput<K, V> {
 			 * the decompressor to read any trailing bytes that weren't critical
 			 * for decompression, which is necessary to keep the stream in sync.
 			 */
-			if (input.read() >= 0) {
-				throw new IOException(
-						"Unexpected extra bytes from input stream for "
-								+ getMapId());
-			}
-
+			//if (input.read() >= 0) {
+			//	throw new IOException(
+			//			"Unexpected extra bytes from input stream for "
+			//					+ getMapId());
+			//}
+            input.close();
 		} catch (IOException ioe) {
 			// Close the streams
 			IOUtils.cleanup(LOG, input);
