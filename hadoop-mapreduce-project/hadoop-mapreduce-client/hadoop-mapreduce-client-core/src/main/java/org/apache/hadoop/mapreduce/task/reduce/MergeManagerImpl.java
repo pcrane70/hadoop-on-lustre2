@@ -251,18 +251,18 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
                                              int fetcher
                                              ) throws IOException {
 	
-	  if (jobConf.getBoolean("test.shuffle", false)) {
-	  
-		  if (jobConf.getBoolean("shuffle.to.disk", false)) {
-			  return new LinkMapOutput<K, V>(mapId, reduceId, this, requestedSize, jobConf,
-					  mapOutputFile, fetcher, true);
-		  } else {
-			  usedMemory += requestedSize;
-			  boolean primaryMapOutput = true;
-			  return new InMemoryLinkMapOutput<K, V>(jobConf, mapId, this,
-						(int) requestedSize, codec, primaryMapOutput);
-		  }
-	  }
+	  //if (jobConf.getBoolean("test.shuffle", false)) {
+	  //
+	  //    if (jobConf.getBoolean("shuffle.to.disk", false)) {
+	  //  	  return new LinkMapOutput<K, V>(mapId, reduceId, this, requestedSize, jobConf,
+	  //  			  mapOutputFile, fetcher, true);
+	  //    } else {
+	  //  	  usedMemory += requestedSize;
+	  //  	  boolean primaryMapOutput = true;
+	  //  	  return new InMemoryLinkMapOutput<K, V>(jobConf, mapId, this,
+	  //  				(int) requestedSize, codec, primaryMapOutput);
+	  //    }
+	  //}
 	  
     if (!canShuffleToMemory(requestedSize)) {
       LOG.info(mapId + ": Shuffling to disk since " + requestedSize + 
@@ -306,10 +306,10 @@ public class MergeManagerImpl<K, V> implements MergeManager<K, V> {
    * Unconditional Reserve is used by the Memory-to-Memory thread
    * @return
    */
-  private synchronized InMemoryMapOutput<K, V> unconditionalReserve(
+  private synchronized InMemoryLinkMapOutput<K, V> unconditionalReserve(
       TaskAttemptID mapId, long requestedSize, boolean primaryMapOutput) {
     usedMemory += requestedSize;
-    return new InMemoryMapOutput<K,V>(jobConf, mapId, this, (int)requestedSize,
+    return new InMemoryLinkMapOutput<K,V>(jobConf, mapId, this, (int)requestedSize,
                                       codec, primaryMapOutput);
   }
   
