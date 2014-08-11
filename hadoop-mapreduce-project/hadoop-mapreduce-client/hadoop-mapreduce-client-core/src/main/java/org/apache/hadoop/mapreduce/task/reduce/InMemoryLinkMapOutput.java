@@ -40,6 +40,8 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.MRConfig;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
+import java.io.RandomAccessFile;
+import java.nio.channels.Channels;
 
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
@@ -107,10 +109,13 @@ class InMemoryLinkMapOutput<K, V> extends InMemoryMapOutput<K, V> {
 			LOG.debug("shuffleToLink: the src " + src + " EXIST!");
 		}
 
-		LOG.debug("src file size: "+f.length());
+		//LOG.debug("src file size: "+f.length());
 		
-		input = new FileInputStream(src);
-        input.skip(offset);
+		//input = new FileInputStream(src);
+        //input.skip(offset);
+
+        RandomAccessFile raf = new RandomAccessFile(f, "r");
+        input = Channels.newInputStream(raf.getChannel().position(offset));
 
 		IFileInputStream checksumIn = new IFileInputStream(input,
 				compressedLength, conf);
@@ -148,6 +153,7 @@ class InMemoryLinkMapOutput<K, V> extends InMemoryMapOutput<K, V> {
 			//					+ getMapId());
 			//}
             input.close();
+            raf.close();
 		} catch (IOException ioe) {
 			// Close the streams
 			IOUtils.cleanup(LOG, input);
