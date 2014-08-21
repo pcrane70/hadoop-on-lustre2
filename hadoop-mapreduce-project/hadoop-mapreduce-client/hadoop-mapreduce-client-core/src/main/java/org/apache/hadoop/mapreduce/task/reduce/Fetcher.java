@@ -17,6 +17,11 @@
  */
 package org.apache.hadoop.mapreduce.task.reduce;
 
+import java.io.RandomAccessFile;
+import org.apache.hadoop.io.ReadaheadPool;
+import org.apache.hadoop.io.ReadaheadPool.ReadaheadRequest;
+import java.io.File;
+
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -339,6 +344,15 @@ class Fetcher<K,V> extends Thread {
 	  decompressedLength = in.readLong();
 	  compressedLength = in.readLong();
 	  in.close();
+
+	  String src = app_path + "output/" + mapId + "/file.out";
+	  File f = new File(src);
+	  RandomAccessFile raf = new RandomAccessFile(f, "r");
+		int DEFAULT_SHUFFLE_READAHEAD_BYTES = 4 * 1024 * 1024;
+		boolean DEFAULT_SHUFFLE_MANAGE_OS_CACHE = true;
+		ReadaheadRequest readaheadRequest = null;
+		ReadaheadPool readaheadPool = ReadaheadPool.getInstance();
+		readaheadRequest = readaheadPool.readaheadStream(f.getAbsolutePath(), raf.getFD(), offset, DEFAULT_SHUFFLE_READAHEAD_BYTES, offset + decompressedLength, readaheadRequest);
     	
       try {
     	// Get the location for the map output - either in-memory or on-disk
