@@ -23,6 +23,7 @@ import org.apache.hadoop.examples.dancing.Sudoku;
 import org.apache.hadoop.examples.pi.DistBbp;
 import org.apache.hadoop.examples.terasort.TeraGen;
 import org.apache.hadoop.examples.terasort.TeraSort;
+import org.apache.hadoop.examples.terasort.TeraSortLustre;
 import org.apache.hadoop.examples.terasort.TeraValidate;
 import org.apache.hadoop.util.ProgramDriver;
 
@@ -69,7 +70,8 @@ public class ExampleDriver {
       pgd.addClass("multifilewc", MultiFileWordCount.class, "A job that counts words from several files.");
       pgd.addClass("dbcount", DBCountPageView.class, "An example job that count the pageview counts from a database.");
       pgd.addClass("teragen", TeraGen.class, "Generate data for the terasort");
-      pgd.addClass("terasort", TeraSort.class, "Run the terasort");
+      pgd.addClass("terasort", TeraSortLustre.class, "Run the terasort with Lustre");
+      pgd.addClass("terasort_hdfs", TeraSort.class, "Run the terasort with HDFS");
       pgd.addClass("teravalidate", TeraValidate.class, "Checking results of terasort");
       exitCode = pgd.run(argv);
     }

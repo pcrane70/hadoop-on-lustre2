@@ -46,8 +46,8 @@ import org.apache.hadoop.util.ToolRunner;
  * To run the program: 
  * <b>bin/hadoop jar hadoop-*-examples.jar terasort in-dir out-dir</b>
  */
-public class TeraSort extends Configured implements Tool {
-  private static final Log LOG = LogFactory.getLog(TeraSort.class);
+public class TeraSortLustre extends Configured implements Tool {
+  private static final Log LOG = LogFactory.getLog(TeraSortLustre.class);
   static String SIMPLE_PARTITIONER = "mapreduce.terasort.simplepartitioner";
   static String OUTPUT_REPLICATION = "mapreduce.terasort.output.replication";
 
@@ -206,10 +206,12 @@ public class TeraSort extends Configured implements Tool {
     }
 
     public void setConf(Configuration conf) {
+      
       try {
         FileSystem fs = FileSystem.getLocal(conf);
+        Path outputPath = TeraOutputFormat.getOutputPath(Job.getInstance(conf));
         this.conf = conf;
-        Path partFile = new Path(TeraInputFormat.PARTITION_FILENAME);
+        Path partFile = new Path(outputPath, TeraInputFormat.PARTITION_FILENAME);
         splitPoints = readPartitions(fs, partFile, conf);
         trie = buildTrie(splitPoints, 0, splitPoints.length, new Text(), 2);
       } catch (IOException ie) {
@@ -285,8 +287,8 @@ public class TeraSort extends Configured implements Tool {
     boolean useSimplePartitioner = getUseSimplePartitioner(job);
     TeraInputFormat.setInputPaths(job, inputDir);
     FileOutputFormat.setOutputPath(job, outputDir);
-    job.setJobName("TeraSort");
-    job.setJarByClass(TeraSort.class);
+    job.setJobName("TeraSortLustre");
+    job.setJarByClass(TeraSortLustre.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Text.class);
     job.setInputFormatClass(TeraInputFormat.class);
@@ -322,7 +324,7 @@ public class TeraSort extends Configured implements Tool {
    * @param args
    */
   public static void main(String[] args) throws Exception {
-    int res = ToolRunner.run(new Configuration(), new TeraSort(), args);
+    int res = ToolRunner.run(new Configuration(), new TeraSortLustre(), args);
     System.exit(res);
   }
 
