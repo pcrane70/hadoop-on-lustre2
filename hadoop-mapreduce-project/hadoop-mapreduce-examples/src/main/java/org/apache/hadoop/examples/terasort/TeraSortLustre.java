@@ -309,7 +309,6 @@ public class TeraSortLustre extends Configured implements Tool {
       }
       job.addCacheFile(partitionUri);  
       long end = System.currentTimeMillis();
-      System.out.println("Spent " + (end - start) + "ms computing partitions.");
       job.setPartitionerClass(TotalOrderPartitioner.class);
     }
     

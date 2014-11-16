@@ -1483,7 +1483,6 @@ public class MapTask extends Task {
       kvbuffer = null;
       mergeParts();
       Path outputPath = mapOutputFile.getOutputFile();
-      System.out.println("MapTask.flush(): outputPath to read=" + outputPath.toString());
 	fileOutputByteCounter.increment(rfs.getFileStatus(outputPath).getLen());
     }
 
@@ -1566,7 +1565,6 @@ public class MapTask extends Task {
         final SpillRecord spillRec = new SpillRecord(partitions);
         final Path filename =
             mapOutputFile.getSpillFileForWrite(numSpills, size);
-        System.out.println("MapTask.sortAndSpill(): SpillFileForWrite=" + filename.toString());
 	out = rfs.create(filename);
 
         final int mstart = kvend / NMETA;
@@ -1788,8 +1786,6 @@ public class MapTask extends Task {
         filename[i] = mapOutputFile.getSpillFile(i);
         finalOutFileSize += rfs.getFileStatus(filename[i]).getLen();
       }
-	System.out.println("MapTask.mergeParts(): numSpills=" + numSpills);
-	System.out.println("MapTask.mergeParts(): indexCacheListSize=" + indexCacheList.size());
       if (numSpills == 1) { //the spill is the final output
         sameVolRename(filename[0],
             mapOutputFile.getOutputFileForWriteInVolume(filename[0]));
@@ -1819,8 +1815,6 @@ public class MapTask extends Task {
       Path finalIndexFile =
           mapOutputFile.getOutputIndexFileForWrite(finalIndexFileSize);
 
-	System.out.println("MapTask.mergeParts(): finalOutputFile for write=" + finalOutputFile.toString());
-	System.out.println("MapTask.mergeParts(): finalIndexFile for write=" + finalIndexFile.toString());
 
       //The output stream for the final single output file
       FSDataOutputStream finalOut = rfs.create(finalOutputFile, true, 4096);

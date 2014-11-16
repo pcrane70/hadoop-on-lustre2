@@ -56,8 +56,7 @@ public class YarnOutputFiles extends MapOutputFile {
     new LocalDirAllocator(MRConfig.LOCAL_DIR);
 
   private Path getAttemptOutputDir() {
-	Path p = new Path(JOB_OUTPUT_DIR, conf.get(JobContext.TASK_ATTEMPT_ID));
-System.out.println("YarnOutputFiles.getAttemptOutputDir(): path=" + p.toString());
+  Path p = new Path(JOB_OUTPUT_DIR, conf.get(JobContext.TASK_ATTEMPT_ID));
     return p;
   }
   
@@ -70,13 +69,11 @@ System.out.println("YarnOutputFiles.getAttemptOutputDir(): path=" + p.toString()
   public Path getOutputFile() throws IOException {
     Path attemptOutput =
       new Path(getAttemptOutputDir(), MAP_OUTPUT_FILENAME_STRING);
-	System.out.println("YarnOutputFiles.getOutputFile(): attemptOutput=" + attemptOutput.toString());
-
+	
 //	String lustreDir = conf.get("lustre.dir");
 //	String user = conf.getUser();
 //	String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
 	Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptOutput);    
-	System.out.println("YarnOutputFiles.getOutputFile(): myPath=" + myPath.toString());
 	return myPath;
 //return lDirAlloc.getLocalPathToRead(attemptOutput.toString(), conf);
   }
@@ -96,7 +93,6 @@ System.out.println("YarnOutputFiles.getAttemptOutputDir(): path=" + p.toString()
 //        String user = conf.getUser();
 //        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
         Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptOutput);
-        System.out.println("YarnOutputFiles.getOutputFileForWrite(): myPath=" + myPath.toString());
         return myPath;  
   
 //return lDirAlloc.getLocalPathForWrite(attemptOutput.toString(), size, conf);
@@ -110,13 +106,10 @@ System.out.println("YarnOutputFiles.getAttemptOutputDir(): path=" + p.toString()
 //    Path attemptOutputDir = new Path(outputDir,
       Path attemptOutputDir = new Path(JOB_OUTPUT_DIR,
         conf.get(JobContext.TASK_ATTEMPT_ID));
-System.out.println("conf.getJobName()=" + conf.getJobName());
-System.out.println("conf.getJobLocalDir=" + conf.getJobLocalDir());
 //	String lustreDir = conf.get("lustre.dir");
 //        String user = conf.getUser();
 //        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
         Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptOutputDir, MAP_OUTPUT_FILENAME_STRING);
-        System.out.println("YarnOutputFiles.getOutputFileForWriteInVolume(): myPath=" + myPath.toString());
         return myPath;
 
 //    return new Path(attemptOutputDir, MAP_OUTPUT_FILENAME_STRING);
@@ -137,7 +130,6 @@ System.out.println("conf.getJobLocalDir=" + conf.getJobLocalDir());
 //        String user = conf.getUser();
 //        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
         Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptIndexOutput);
-        System.out.println("YarnOutputFiles.getOutputIndexFile(): myPath=" + myPath.toString());
         return myPath;
 
 //    return lDirAlloc.getLocalPathToRead(attemptIndexOutput.toString(), conf);
@@ -159,7 +151,6 @@ System.out.println("conf.getJobLocalDir=" + conf.getJobLocalDir());
 //        String user = conf.getUser();
 //        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
         Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptIndexOutput);
-        System.out.println("YarnOutputFiles.getOutputIndexFileForWrite(): myPath=" + myPath.toString());
         return myPath;    
 
 //return lDirAlloc.getLocalPathForWrite(attemptIndexOutput.toString(),
@@ -179,7 +170,6 @@ System.out.println("conf.getJobLocalDir=" + conf.getJobLocalDir());
 //        String user = conf.getUser();
 //        String application = conf.get(JobContext.APPLICATION_ATTEMPT_ID);
         Path myPath = new Path(conf.get(MRConfig.LOCAL_DIR) + "/" + attemptOutputDir, MAP_OUTPUT_FILENAME_STRING+MAP_OUTPUT_INDEX_SUFFIX_STRING);
-        System.out.println("YarnOutputFiles.getOutputIndexFileForWriteInVolume(): myPath=" + myPath.toString());
         return myPath;
 
 //    return new Path(attemptOutputDir, MAP_OUTPUT_FILENAME_STRING +
@@ -271,8 +261,7 @@ System.out.println("conf.getJobLocalDir=" + conf.getJobLocalDir());
 	  Path p = new Path(path, outputPart);
 	  
 	  
-	  System.out.println("YarnOutputFiles.getInputFileForWrite(): myPath=" + p.toString());
-    return p;
+	return p;
 //	  return lDirAlloc.getLocalPathForWrite(String.format(
 //        REDUCE_INPUT_FILE_FORMAT_STRING,
 //        getAttemptOutputDir().toString(), mapId.getId()),

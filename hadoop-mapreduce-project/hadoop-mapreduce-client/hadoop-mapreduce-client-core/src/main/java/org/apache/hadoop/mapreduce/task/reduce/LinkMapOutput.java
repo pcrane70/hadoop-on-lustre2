@@ -76,9 +76,6 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 		this.compressedLength = compressedLength;
 		this.decompressedLength = decompressedLength;
 	
-		System.out.println("tnstansbury: " + conf.get(MRConfig.LOCAL_DIR + "tim"));	
-		System.out.println(MRConfig.LOCAL_DIR);
-		System.out.println(conf.get(MRConfig.TEMP_DIR));
 		//String mapredLocalDir = conf.get("lustre.dir");
 		//String mapredLocalDir = conf.get(MRConfig.TEMP_DIR);
 		//String user = conf.getUser();
@@ -105,13 +102,11 @@ public class LinkMapOutput<K, V> extends MapOutput<K, V> {
 		}
 
 		String lnCmd = conf.get("hadoop.ln.cmd");
-        String command = lnCmd + " " + src + " " + outputPath;
-		System.out.println("Executing command: " + command);	
+        String command = lnCmd + " " + src + " " + outputPath;	
 		try {
 			
 			String mkdirCmd = "mkdir -p ";
             String dir = outputPath.getParent().toString();
-			System.out.println("Executing mkdir command: " + mkdirCmd + dir);
 			
 			Runtime.getRuntime().exec(mkdirCmd + dir).waitFor();
 			
