@@ -15,8 +15,8 @@ order to run this software in "diskless" mode.
 * **Filename** | **Configuration Parameter** | **Suggested value**
 * core-site.xml | fs.defaultFS | file:///
 * core-site.xml | hadoop.tmp.dir | Any location on the Lustre filesystem
-* mapred-site.xml | yarn.app.mapreduce.am.staging-dir | <lustre_mount_point>/tmp/yarn-staging
-* mapred-site.xml | mapred.cluster.local.dir | Any local path outside <lustre_mount_point>
+* mapred-site.xml | yarn.app.mapreduce.am.staging-dir | {lustre\_mount\_point}/tmp/yarn-staging
+* mapred-site.xml | mapred.cluster.local.dir | Any local path outside {lustre\_mount\_point}
 * mapred-site.xml | lustre.dir | Any directory on Lustre
 * mapred-site.xml | hadoop.ln.cmd | Set to the full path for the system “ln” command
 * yarn-site.xml | yarn.nodemanager.local-dirs | Any directory on Lustre named "${host.name}"
